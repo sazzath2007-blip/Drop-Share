@@ -262,11 +262,26 @@ export class P2PTransfer {
   }
 
   async sendFile(file: File) {
-    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      throw new Error('Data channel not ready');
+    // Wait for data channel to be open if it's connecting
+    if (this.dataChannel && this.dataChannel.readyState === 'connecting') {
+      console.log('Waiting for data channel to open...');
+      await new Promise<void>((resolve, reject) => {
+        if (!this.dataChannel) return reject(new Error('No data channel'));
+        const timeout = setTimeout(() => reject(new Error('Data channel timeout')), 10000);
+        const onOpen = () => {
+          clearTimeout(timeout);
+          this.dataChannel?.removeEventListener('open', onOpen);
+          resolve();
+        };
+        this.dataChannel.addEventListener('open', onOpen);
+      });
     }
 
-    // Send metadata first
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      throw new Error(`Data channel not ready (state: ${this.dataChannel?.readyState})`);
+    }
+
+    console.log('Starting file transfer:', file.name, file.size);
     this.dataChannel.send(JSON.stringify({
       type: 'metadata',
       name: file.name,

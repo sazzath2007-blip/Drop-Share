@@ -53,9 +53,14 @@ export default function App() {
         a.click();
         URL.revokeObjectURL(url);
       },
-      () => {
+      async () => {
         if (selectedFileRef.current && modeRef.current === 'send') {
-          p2pRef.current?.sendFile(selectedFileRef.current);
+          try {
+            await p2pRef.current?.sendFile(selectedFileRef.current);
+          } catch (err) {
+            console.error('Auto-send failed:', err);
+            setError('Connection established but file transfer failed to start. Please try again.');
+          }
         }
       }
     );
@@ -258,10 +263,22 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center justify-center gap-4 py-4">
-                      <div className="flex items-center gap-2 text-neutral-500 text-sm">
-                        <Loader2 size={16} className="animate-spin" />
-                        <span>Waiting for receiver...</span>
-                      </div>
+                      {error ? (
+                        <button 
+                          onClick={() => {
+                            if (selectedFile) handleSend(selectedFile);
+                          }}
+                          className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium"
+                        >
+                          <AlertCircle size={16} />
+                          <span>Retry Connection</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 text-neutral-500 text-sm">
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>Waiting for receiver to join...</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3 text-left">
