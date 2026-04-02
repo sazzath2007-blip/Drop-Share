@@ -1,0 +1,5 @@
+{
+  "name": "DropShare",
+  "description": "A high-speed, peer-to-peer file sharing application for sending large files (up to 5GB) directly between devices.",
+  "requestFramePermissions": []
+}

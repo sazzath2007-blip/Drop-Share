@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: rooms
+    // Document ID: roomId (auto-generated or custom)
+    // Fields:
+    //   - offer: string (optional) - SDP offer
+    //   - answer: string (optional) - SDP answer
+    //   - createdAt: timestamp (required)
+    //   - status: string (required) - 'waiting', 'connected', 'closed'
+    //
+    // Subcollection: rooms/{roomId}/candidates
+    // Document ID: candidateId
+    // Fields:
+    //   - candidate: string (required) - ICE candidate
+    //   - type: string (required) - 'offer' or 'answer'
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidRoom(data) {
+      return data.status in ['waiting', 'connected', 'closed'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidCandidate(data) {
+      return data.candidate is string &&
+             data.type in ['offer', 'answer'] &&
+             data.createdAt is timestamp;
+    }
+
+    match /rooms/{roomId} {
+      // Allow anyone to create a room
+      allow create: if isValidRoom(request.resource.data);
+      // Allow reading and listing for shortCode lookup
+      allow read, list: if true;
+      allow update: if true;
+      
+      match /candidates/{candidateId} {
+        allow create: if isValidCandidate(request.resource.data);
+        allow read: if true;
+      }
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

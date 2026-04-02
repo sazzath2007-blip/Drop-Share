@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "A signaling room for WebRTC P2P file transfer.",
+      "type": "object",
+      "properties": {
+        "shortCode": { "type": "string", "description": "A 6-digit code for easy sharing." },
+        "offer": { "type": "string", "description": "SDP offer from the sender." },
+        "answer": { "type": "string", "description": "SDP answer from the receiver." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the room was created." },
+        "status": { "type": "string", "enum": ["waiting", "connected", "closed"], "description": "Current status of the connection." }
+      },
+      "required": ["shortCode", "createdAt", "status"]
+    },
+    "Candidate": {
+      "title": "Candidate",
+      "description": "An ICE candidate for WebRTC signaling.",
+      "type": "object",
+      "properties": {
+        "candidate": { "type": "string", "description": "The ICE candidate stringified." },
+        "type": { "type": "string", "enum": ["offer", "answer"], "description": "Who sent this candidate." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["candidate", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Collection of signaling rooms."
+    },
+    "/rooms/{roomId}/candidates/{candidateId}": {
+      "schema": "Candidate",
+      "description": "Subcollection for ICE candidates."
+    }
+  }
+}
